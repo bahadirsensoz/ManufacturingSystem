@@ -4,7 +4,7 @@ import pandas as pd
 
 
 # Ali Bahadir Sensoz
-# Sila Er
+# Sıla Er
 # Project 2-ManufacturingSystem
 
 
