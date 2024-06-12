@@ -2,12 +2,6 @@ import simpy
 import random
 import pandas as pd
 
-
-# Ali Bahadir Sensoz
-# Sila Er
-# Project 2-ManufacturingSystem
-
-
 class Shift:
     def __init__(self, env, start_time, end_time):
         self.env = env
@@ -40,6 +34,10 @@ class ManufacturingSystem:
         self.packaging = simpy.Resource(env, capacity=1)
         self.shift = Shift(env, start_time=shift_start, end_time=shift_end)
 
+        # Track machine setup for different products
+        self.machine_setup = {i: None for i in range(machine_count)}
+        self.setup_time = {i: 0 for i in range(machine_count)}
+
         # Metrics
         self.total_products_produced = 0
         self.total_waiting_times = {
@@ -59,22 +57,29 @@ class ManufacturingSystem:
         yield self.raw_materials.put(raw_material)
         print(f'Loaded raw material at {self.env.now}')
 
-    def machining_process(self, part):
+    def machining_process(self, part, product_type):
         with self.machining.request() as request:
             yield request
+            machine_id = self.get_available_machine()
+            if self.machine_setup[machine_id] != product_type:
+                setup_time = random.uniform(0.5, 1.5)
+                yield self.env.timeout(setup_time)
+                self.machine_setup[machine_id] = product_type
+                self.setup_time[machine_id] += setup_time
+
             start_time = self.env.now
             machining_time = random.uniform(4, 6)
             yield self.env.timeout(machining_time)
             wait_time = self.env.now - start_time
             self.total_waiting_times['machining'] += wait_time
             self.processed_parts['machining'] += 1
-            print(f'Machined part at {self.env.now}')
+            print(f'Machined part for {product_type} at {self.env.now}')
             if random.random() < 0.1:  # 10% failure rate
                 repair_time = random.uniform(1, 3)
                 yield self.env.timeout(repair_time)
                 print(f'Machine repaired at {self.env.now}')
 
-    def assembly_process(self, part):
+    def assembly_process(self, part, product_type):
         with self.assembly.request() as request:
             yield request
             start_time = self.env.now
@@ -83,9 +88,9 @@ class ManufacturingSystem:
             wait_time = self.env.now - start_time
             self.total_waiting_times['assembly'] += wait_time
             self.processed_parts['assembly'] += 1
-            print(f'Assembled part at {self.env.now}')
+            print(f'Assembled part for {product_type} at {self.env.now}')
 
-    def quality_control_process(self, product):
+    def quality_control_process(self, product, product_type):
         with self.quality_control.request() as request:
             yield request
             start_time = self.env.now
@@ -94,9 +99,9 @@ class ManufacturingSystem:
             wait_time = self.env.now - start_time
             self.total_waiting_times['quality_control'] += wait_time
             self.processed_parts['quality_control'] += 1
-            print(f'Quality checked product at {self.env.now}')
+            print(f'Quality checked product for {product_type} at {self.env.now}')
 
-    def packaging_process(self, product):
+    def packaging_process(self, product, product_type):
         with self.packaging.request() as request:
             yield request
             start_time = self.env.now
@@ -105,7 +110,7 @@ class ManufacturingSystem:
             wait_time = self.env.now - start_time
             self.total_waiting_times['packaging'] += wait_time
             self.processed_parts['packaging'] += 1
-            print(f'Packaged product at {self.env.now}')
+            print(f'Packaged product for {product_type} at {self.env.now}')
             self.total_products_produced += 1
 
     def run_production(self, product_type):
@@ -113,13 +118,19 @@ class ManufacturingSystem:
             if self.shift.is_active:
                 raw_material = f'raw_material_{product_type}'
                 yield self.env.process(self.load_raw_material(raw_material))
-                yield self.env.process(self.machining_process(raw_material))
-                yield self.env.process(self.assembly_process(raw_material))
-                yield self.env.process(self.quality_control_process(raw_material))
-                yield self.env.process(self.packaging_process(raw_material))
+                yield self.env.process(self.machining_process(raw_material, product_type))
+                yield self.env.process(self.assembly_process(raw_material, product_type))
+                yield self.env.process(self.quality_control_process(raw_material, product_type))
+                yield self.env.process(self.packaging_process(raw_material, product_type))
                 yield self.env.timeout(1)
             else:
                 yield self.env.timeout(1)
+
+    def get_available_machine(self):
+        for i in range(len(self.machine_setup)):
+            if self.machining.count < self.machining.capacity:
+                return i
+        return 0
 
 def run_simulation(env, system, product_types):
     for product_type in product_types:

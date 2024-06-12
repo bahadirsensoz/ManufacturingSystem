@@ -1,0 +1,11 @@
+Machine Count;Shift Start;Shift End;Product Types;Total Products Produced;Average Waiting Time (Machining);Average Waiting Time (Assembly);Average Waiting Time (Quality Control);Average Waiting Time (Packaging)
+2;8;20;A, B;22;4,84;3,05;1,44;1,05
+3;6;18;A, B;19;5,22;2,98;1,48;0,97
+1;7;19;A, B, C;25;4,98;2,98;1,65;1,02
+4;6;18;A;10;5,18;3,13;1,60;0,90
+2;8;16;B, C;16;5,10;2,68;1,57;1,03
+3;9;21;A, C;22;5,08;3,03;1,49;1,12
+2;7;19;A, B, C;28;5,26;2,99;1,43;1,06
+5;5;17;A, B, C, D;37;5,02;2,93;1,47;0,95
+1;8;20;B, C, D, E;30;5,02;3,01;1,45;1,02
+4;8;20;A, B, C;29;5,15;2,92;1,42;1,01
