@@ -2,6 +2,11 @@ import simpy
 import random
 import pandas as pd
 
+# Ali Bahadir Sensoz
+# Sila Er
+# Project 2-ManufacturingSystem
+
+
 class Shift:
     def __init__(self, env, start_time, end_time):
         self.env = env
